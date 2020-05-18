@@ -1,0 +1,37 @@
+{
+	"name": "SinkFile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"SinkContainer": {
+				"type": "string"
+			},
+			"SinkFileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().SinkFileName",
+					"type": "Expression"
+				},
+				"container": {
+					"value": "@dataset().SinkContainer",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

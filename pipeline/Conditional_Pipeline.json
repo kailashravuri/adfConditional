@@ -1,0 +1,175 @@
+{
+	"name": "Conditional_Pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get_MMS_MeataData",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "MMS_File",
+						"type": "DatasetReference",
+						"parameters": {
+							"FileName": {
+								"value": "@variables('InputFileName')",
+								"type": "Expression"
+							},
+							"ContainerName": {
+								"value": "@variables('INputFile_Container')",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"itemName"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "File_Name_Condition",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get_MMS_MeataData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(activity('Get_MMS_MeataData').output,variables('CheckFileName'))",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Failed_Varaible_Activity",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "FailedConditionVariable",
+								"value": "File name does not conains\n"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Copy_Activity",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "MMS_File",
+									"type": "DatasetReference",
+									"parameters": {
+										"FileName": {
+											"value": "variables('INputFile_Container')",
+											"type": "Expression"
+										},
+										"ContainerName": {
+											"value": "@variables('InputFileName')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SinkFile",
+									"type": "DatasetReference",
+									"parameters": {
+										"SinkContainer": {
+											"value": "@variables('Output_File_Contianer')",
+											"type": "Expression"
+										},
+										"SinkFileName": {
+											"value": "@variables('Output_File')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"InputFileName": {
+				"type": "String",
+				"defaultValue": "input"
+			},
+			"INputFile_Container": {
+				"type": "String",
+				"defaultValue": "test.json"
+			},
+			"CheckFileName": {
+				"type": "String",
+				"defaultValue": "test"
+			},
+			"FailedConditionVariable": {
+				"type": "String"
+			},
+			"Output_File": {
+				"type": "String",
+				"defaultValue": "output"
+			},
+			"Output_File_Contianer": {
+				"type": "String",
+				"defaultValue": "test.json"
+			}
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
